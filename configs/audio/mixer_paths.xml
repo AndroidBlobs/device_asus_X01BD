@@ -157,6 +157,8 @@
     <ctl name="INT4_MI2S_RX Channels" value="One" />
     <ctl name="INT0_MI2S_RX Channels" value="One" />
     <ctl name="INT3_MI2S_TX Channels" value="One" />
+    <ctl name="TERT_MI2S_RX Channels" value="One" />
+    <ctl name="TERT_MI2S_TX Channels" value="One" />
     <ctl name="I2S TX2 INP1" value="ZERO" />
     <ctl name="I2S TX2 INP2" value="ZERO" />
     <ctl name="INT4_MI2S_RX Audio Mixer MultiMedia4" value="0" />
@@ -629,7 +631,6 @@
         <path name="audio-ull-playback hdmi" />
         <path name="audio-ull-playback speaker" />
     </path>
-
 
     <path name="audio-ull-playback speaker-and-display-port">
         <path name="audio-ull-playback display-port" />
@@ -1233,7 +1234,6 @@
         <ctl name="INT0_MI2S_RX Audio Mixer MultiMedia15" value="1" />
         <!-- Huaqin add for ZQL1650-371 by xudayi at 2018/02/08 end -->
     </path>
-
     <!-- Huaqin add for config new audioboard xml by xudayi at 2018/03/05 start -->
     <path name="compress-offload-playback8 speaker">
 	<ctl name="TERT_MI2S_RX Audio Mixer MultiMedia15" value="1" />
@@ -2372,6 +2372,18 @@
 
     <path name="unprocessed-mic">
         <path name="unprocessed-handset-mic" />
+    </path>
+
+    <path name="unprocessed-stereo-mic">
+        <path name="voice-rec-dmic-ef" />
+    </path>
+
+    <path name="unprocessed-quad-mic">
+        <path name="quad-mic" />
+    </path>
+
+    <path name="unprocessed-headset-mic">
+        <path name="headset-mic" />
     </path>
 
     <!-- Added for ADSP testfwk -->

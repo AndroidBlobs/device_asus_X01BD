@@ -27,6 +27,8 @@
 #
 #
 
+import /vendor/etc/init/hw/init.amt.rc
+
 on early-init
     mkdir /firmware 0771 system system
     mkdir /bt_firmware 0771 system system
@@ -44,26 +46,11 @@ on init
 on fs
     wait /dev/block/platform/soc/${ro.boot.bootdevice}
     symlink /dev/block/platform/soc/${ro.boot.bootdevice} /dev/block/bootdevice
-    mount_all /vendor/etc/fstab.qcom
-    swapon_all /vendor/etc/fstab.qcom
-#Huaqin modify for ZQL1650-96 by lanshiming at 2018/1/29 start
-    setprop persist.alreadly_boot_resize true
-#Huaqin modify for ZQL1650-96 by lanshiming at 2018/1/29 end
-
-    chown root system /mnt/vendor/persist
-    chmod 0771 /mnt/vendor/persist
-    mkdir /mnt/vendor/persist/data 0700 system system
-    mkdir /mnt/vendor/persist/bms 0700 root system
-    restorecon_recursive /mnt/vendor/persist
-    write /sys/kernel/boot_adsp/boot 1
 
 on post-fs
     start vendor.qseecomd
     exec - system system -- /vendor/bin/init.qti.qseecomd.sh
     write /dev/ipa 1
-#Huaqin add for ZQL1650-43 by lanshiming at 2018/1/18 start
-    start emmc_prop_init
-#Huaqin add for ZQL1650-43 by lanshiming at 2018/1/18 end
 
 on init
     write /sys/module/qpnp_rtc/parameters/poweron_alarm 1
@@ -73,9 +60,19 @@ on post-fs-data
     mkdir /data/tombstones/lpass 0771 system system
     mkdir /data/tombstones/wcnss 0771 system system
     mkdir /data/tombstones/dsps 0771 system system
-    mkdir /data/vendor/hbtp 0750 system system
     mkdir /data/misc/seemp 0700 system system
-    mkdir /data/vendor/tloc 0700 system drmrpc
+
+# ------------------- focal fingerprint begin -------------------
+    mkdir /data/vendor/focaltech 0760 system system
+    restorecon /data/vendor/focaltech
+# ------------------- focal fingerprint end ---------------------
+
+# ------------------- cdfinger fingerprint begin -------------------
+    #Create directory for cdfinger fingerprint
+    mkdir /data/system/cdfinger 0700 system system
+    restorecon /data/system/cdfinger
+# ------------------- cdfinger fingerprint end ---------------------
+
 
 on boot
     start rmt_storage
@@ -86,86 +83,46 @@ on boot
     write /dev/cpuset/background/cpus 0-7
     write /dev/cpuset/system-background/cpus 0-7
     ####Regionalization config and prop files####
-    chmod 0644 /mnt/vendor/persist/speccfg/spec
-    chmod 0644 /mnt/vendor/persist/speccfg/devicetype
-    chmod 0644 /mnt/vendor/persist/speccfg/mbnversion
-    chmod 0644 /mnt/vendor/persist/speccfg/.not_triggered
-    chmod 0644 /mnt/vendor/persist/speccfg/vendor_ro.prop
-    chmod 0644 /mnt/vendor/persist/speccfg/vendor_persist.prop
-    chmod 0644 /mnt/vendor/persist/speccfg/submask
-    chmod 0644 /mnt/vendor/persist/speccfg/partition
-    chown system system /mnt/vendor/persist/speccfg/spec
-    chown system system /mnt/vendor/persist/speccfg/devicetype
-    chown system system /mnt/vendor/persist/speccfg/mbnversion
-    chown system system /mnt/vendor/persist/speccfg/.not_triggered
-    chown system system /mnt/vendor/persist/speccfg/vendor_ro.prop
-    chown system system /mnt/vendor/persist/speccfg/vendor_persist.prop
-    chown system system /mnt/vendor/persist/speccfg/submask
-    chown system system /mnt/vendor/persist/speccfg/partition
+    chmod 0644 /persist/speccfg/spec
+    chmod 0644 /persist/speccfg/devicetype
+    chmod 0644 /persist/speccfg/mbnversion
+    chmod 0644 /persist/speccfg/.not_triggered
+    chmod 0644 /persist/speccfg/vendor_ro.prop
+    chmod 0644 /persist/speccfg/vendor_persist.prop
+    chmod 0644 /persist/speccfg/submask
+    chmod 0644 /persist/speccfg/partition
+    chown system system /persist/speccfg/spec
+    chown system system /persist/speccfg/devicetype
+    chown system system /persist/speccfg/mbnversion
+    chown system system /persist/speccfg/.not_triggered
+    chown system system /persist/speccfg/vendor_ro.prop
+    chown system system /persist/speccfg/vendor_persist.prop
+    chown system system /persist/speccfg/submask
+    chown system system /persist/speccfg/partition
+    
 
-#Huaqin add for als/ps permission by zhuqiang at 2018/8/03 start
-    chmod 0644 /sys/class/sensors/stk3x3x-proximity/sensors_enable
-    chmod 0644 /sys/class/sensors/stk3x3x-proximity/sensors_delay
-    chmod 0644 /sys/class/sensors/stk3x3x-proximity/sensors_calibrate
-    chmod 0644 /sys/class/sensors/stk3x3x-proximity/sensors_enable_wakeup
-    chmod 0644 /sys/class/sensors/stk3x3x-proximity/sensors_flush
-    chown system system /sys/class/sensors/stk3x3x-proximity/sensors_enable
-    chown system system /sys/class/sensors/stk3x3x-proximity/sensors_delay
-    chown system system /sys/class/sensors/stk3x3x-proximity/sensors_calibrate
-    chown system system /sys/class/sensors/stk3x3x-proximity/sensors_enable_wakeup
-    chown system system /sys/class/sensors/stk3x3x-proximity/sensors_flush
+# fingerprint
+    chmod 0666 /dev/fpsdev0
+    chown system system /dev/fpsdev0
+    chmod 0666 /dev/goodix_fp
+    chown system system /dev/goodix_fp
+    chmod 0666 /dev/focaltech_fp
+    chown system system /dev/focaltech_fp
 
-    chmod 0644 /sys/class/sensors/stk3x3x-light/sensors_enable
-    chmod 0644 /sys/class/sensors/stk3x3x-light/sensors_delay
-    chmod 0644 /sys/class/sensors/stk3x3x-light/sensors_calibrate
-    chmod 0644 /sys/class/sensors/stk3x3x-light/sensors_enable_wakeup
-    chmod 0644 /sys/class/sensors/stk3x3x-light/sensors_flush
-    chown system system /sys/class/sensors/stk3x3x-light/sensors_enable
-    chown system system /sys/class/sensors/stk3x3x-light/sensors_delay
-    chown system system /sys/class/sensors/stk3x3x-light/sensors_calibrate
-    chown system system /sys/class/sensors/stk3x3x-light/sensors_enable_wakeup
-    chown system system /sys/class/sensors/stk3x3x-light/sensors_flush
 
-    chown radio radio sys/module/stk3x3x/parameters/call_status_flag
-#Huaqin add for als/ps permission by zhuqiang at 2018/8/03 end
-
-#Huaqin add for sensor Permission-ZQL1650-141 by jianghao at 2018/12/27 start
-    chmod 0644 /sys/class/sensors/stk3x1x-proximity/sensors_enable
-    chmod 0644 /sys/class/sensors/stk3x1x-proximity/sensors_delay
-    chmod 0644 /sys/class/sensors/stk3x1x-proximity/sensors_calibrate
-    chmod 0644 /sys/class/sensors/stk3x3x-proximity/sensors_enable_wakeup
-    chmod 0644 /sys/class/sensors/stk3x1x-proximity/sensors_flush
-    chown system system /sys/class/sensors/stk3x1x-proximity/sensors_enable
-    chown system system /sys/class/sensors/stk3x1x-proximity/sensors_delay
-    chown system system /sys/class/sensors/stk3x1x-proximity/sensors_calibrate
-    chown system system /sys/class/sensors/stk3x1x-proximity/sensors_enable_wakeup
-    chown system system /sys/class/sensors/stk3x1x-proximity/sensors_flush
-
-    chmod 0644 /sys/class/sensors/stk3x1x-light/sensors_enable
-    chmod 0644 /sys/class/sensors/stk3x1x-light/sensors_delay
-    chmod 0644 /sys/class/sensors/stk3x1x-light/sensors_calibrate
-    chmod 0644 /sys/class/sensors/stk3x1x-light/sensors_enable_wakeup
-    chmod 0644 /sys/class/sensors/stk3x1x-light/sensors_flush
-    chown system system /sys/class/sensors/stk3x1x-light/sensors_enable
-    chown system system /sys/class/sensors/stk3x1x-light/sensors_delay
-    chown system system /sys/class/sensors/stk3x1x-light/sensors_calibrate
-    chown system system /sys/class/sensors/stk3x1x-light/sensors_enable_wakeup
-    chown system system /sys/class/sensors/stk3x1x-light/sensors_flush
-
-    chown radio radio sys/module/stk3x1x/parameters/call_status_flag
-#Huaqin add for sensors permission-ZQL1650-141 by jianghao at 2018/12/27 end
 
 #Create folder dump yuv images while debugging
     mkdir /data/vendor/camera 0770 camera camera
 
 #Load WLAN driver
-   insmod /vendor/lib/modules/qca_cld3/qca_cld3_wlan.ko
+   insmod /vendor/lib/modules/qca_cld3_wlan.ko
 
 #USB controller configuration
     setprop vendor.usb.rndis.func.name "rndis_bam"
     setprop vendor.usb.rmnet.func.name "rmnet_bam"
     setprop vendor.usb.rmnet.inst.name "rmnet"
     setprop vendor.usb.dpl.inst.name "dpl"
+    setprop vendor.usb.qdss.inst.name "qdss"
     write /sys/module/usb_f_qcrndis/parameters/rndis_dl_max_xfer_size 15916
     setprop sys.usb.configfs 1
 
@@ -225,10 +182,6 @@ service vendor.qseecomd /vendor/bin/qseecomd
    user root
    group root
 
-#service mpdecision /system/vendor/bin/mpdecision --avg_comp
-#   user root
-#   disabled
-#
 #service qosmgrd /system/bin/qosmgr /system/etc/qosmgr_rules.xml
 #   user system
 #   group system
@@ -251,10 +204,6 @@ service thermal-engine /system/vendor/bin/thermal-engine
 #    class core
 #    oneshot
 #
-service time_daemon /system/vendor/bin/time_daemon
-   class late_start
-   user root
-   group root
 
 service adsprpcd_root /vendor/bin/adsprpcd
    class main
@@ -265,12 +214,6 @@ service adsprpcd /vendor/bin/adsprpcd audiopd
    class main
    user media
    group media
-
-service hbtp /system/vendor/bin/hbtp_daemon
-    class main
-    user system
-    group system
-    disabled
 
 service audiod /system/vendor/bin/audiod
    class late_start
@@ -512,52 +455,89 @@ service seempd /system/bin/seempd
     group system sdcard_rw
     socket seempdw dgram 0666 system system
 
-service vendor.tlocd /vendor/bin/tloc_daemon
-    class late_start
-    user system
-    group drmrpc gps net_raw
-
 service vendor.hvdcp_opti /system/vendor/bin/hvdcp_opti
      class main
      user root
      group system wakelock
 
-service smcinvoked /system/bin/smcinvoked
-   class main
-   user system
-   group system
-
-#Huaqin add for ZQL1650-43 by lanshiming at 2018/1/18 start
-service emmc_prop_init /vendor/bin/sh /vendor/bin/emmc_prop_init.sh
-    class core
+service  getaplog /system/bin/getlog -c
+    disabled
     user root
     oneshot
+    seclabel u:r:logoem:s0
+
+service  stopaplog /system/bin/getlog -s
     disabled
-#Huaqin add for ZQL1650-43 by lanshiming at 2018/1/18 end
+    user root
+    oneshot
+    seclabel u:r:logoem:s0
 
-# Huaqin modify for ZQL1820-1234 by lanshiming at 2018/11/13 start
-# For user build, we don't want the phone die when KE occur
-# Just reboot it
-on property:ro.build.type=user
-   write sys/module/msm_poweroff/parameters/download_mode 0
+on property:persist.sys.debug.getaplog=1
+    restart getaplog
+on property:persist.sys.debug.getaplog=0
+    start stopaplog
 
-# Huaqin modify for ZQL1820-1234 by lanshiming at 2018/11/13 end
+service  getqxdmlog /vendor/bin/diag_mdlog
+    disabled
+    user root
+    oneshot
 
-#Huaqin modify for disable sar in Indonesia by chenyijun5 at 2018/03/20 start
-on property:ro.config.versatility=ID
-    write /sys/module/sx9310/parameters/sar_switcher 1
-#Huaqin modify for disable sar in Indonesia by chenyijun5 at 2018/03/20 end
-#Huaqin porting nfc for ZQL1650-1157 by daiweiwei at 2018/4/17 start
+service  stopqxdmlog /system/bin/getlog -x
+    disabled
+    user root
+    oneshot
+    seclabel u:r:logoem:s0
+
+on property:persist.sys.debug.getqxdmlog=1
+    restart getqxdmlog
+on property:persist.sys.debug.getqxdmlog=0
+    start stopqxdmlog
+
+service  gettcpdumplog /system/bin/getlog -t
+    disabled
+    user root
+    oneshot
+    seclabel u:r:logoem:s0
+
+service  stoptcpdumplog /system/bin/getlog -p
+    disabled
+    user root
+    oneshot
+    seclabel u:r:logoem:s0
+
+service  getpersistlog /system/bin/getpersistlog
+    class main
+    user root
+    oneshot
+    seclabel u:r:logoem:s0
+
+on property:persist.sys.debug.gettcpdump=1
+   restart gettcpdumplog
+on property:persist.sys.debug.gettcpdump=0
+   start stoptcpdumplog
+
+service getalllog /system/bin/sh /system/etc/getalllog.sh
+   disabled
+   user root
+   oneshot
+   seclabel u:r:logoem:s0
+on property:persist.sys.debug.getalllog=1
+   restart getalllog
+on property:persist.sys.debug.getalllog=0
+   stop getalllog
+
+service copyanr /system/bin/sh /system/bin/copyanr.sh
+    class late_start
+    user root
+    group sdcard_rw
+    oneshot
+    disabled
+    seclabel u:r:dumpstate:s0
+
+on property:persist.sys.debug.copyanr=1
+   start copyanr
+on property:persist.sys.debug.copyanr=0
+   stop copyanr
+
 on boot
-    chmod 0666 /dev/nq-nci
-    chown system system /dev/nq-nci
-#Huaqin porting nfc for ZQL1650-1157 by daiweiwei at 2018/4/17 end
-
-# Huaqin add for ZQL1820-84 by liunianliang at 2018/07/16 start
-# for reduce power consumption.
-on property:sys.boot_completed=1
-    write /sys/class/gpio/export 12
-    write /sys/class/gpio/gpio12/direction out
-    write /sys/class/gpio/gpio12/value 0
-    write /sys/class/gpio/unexport 12
-# Huaqin add for ZQL1820-84 by liunianliang at 2018/07/16 end
+   start getpersistlog
